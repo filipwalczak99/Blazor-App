@@ -1,0 +1,189 @@
+﻿@inject IProductService ProductService
+
+<h3>Lista produktów</h3>
+
+<!-- Wyświetlanie listy produktów -->
+@if (Products != null && Products.Any())
+{
+    <table>
+        <thead>
+            <tr>
+                <th>Nazwa</th>
+                <th>Cena</th>
+                <th>Akcje</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var product in Products)
+            {
+                <tr>
+                    <td>@product.Name</td>
+                    <td>@product.Price</td>
+                    <td>
+                        <button @onclick="() => EditProduct(product)">Edytuj</button>
+                        <button @onclick="() => DeleteProduct(product.Id)">Usuń</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>Brak produktów do wyświetlenia.</p>
+}
+
+<!-- Formularz dodawania/edycji produktów -->
+@if (ShowAddEditForm)
+{
+    <h4>@(IsEditing ? "Edytuj produkt" : "Dodaj nowy produkt")</h4>
+    <form @onsubmit="SaveProduct">
+        <label>Nazwa produktu:</label>
+        <input type="text" @bind="ProductToEdit.Name" />
+        <label>Cena:</label>
+        <input type="number" @bind="ProductToEdit.Price" />
+        <button type="submit">@((IsEditing ? "Zapisz zmiany" : "Dodaj"))</button>
+    </form>
+}
+else
+{
+    <button @onclick="ShowAddForm">Dodaj nowy produkt</button>
+}
+
+@code {
+    List<Product> Products { get; set; }
+    bool ShowAddEditForm { get; set; }
+    bool IsEditing { get; set; }
+    Product ProductToEdit { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProducts();
+    }
+
+    async Task LoadProducts()
+    {
+        Products = await ProductService.GetProductsAsync();
+    }
+
+    void ShowAddForm()
+    {
+        ShowAddEditForm = true;
+        IsEditing = false;
+        ProductToEdit = new Product();
+    }
+
+    void EditProduct(Product product)
+    {
+        ShowAddEditForm = true;
+        IsEditing = true;
+        ProductToEdit = product;
+    }
+
+    async Task SaveProduct()
+    {
+        if (IsEditing)
+        {
+            await ProductService.UpdateProductAsync(ProductToEdit);
+        }
+        else
+        {
+            await ProductService.CreateProductAsync(ProductToEdit);
+        }
+        ShowAddEditForm = false;
+        await LoadProducts();
+    }
+
+    async Task DeleteProduct(int productId)
+    {
+        await ProductService.DeleteProductAsync(productId);
+        await LoadProducts();
+    }
+}
+
+        @inject IProductService ProductService
+
+<h3>Lista produktów</h3>
+
+<div>
+    <input type="text" @bind="filterValue" />
+    <button @onclick="FilterProducts">Filtruj</button>
+    <button @onclick="ResetFilter">Resetuj</button>
+</div>
+
+<div>
+    <select @bind="selectedSortOption">
+        <option value="Name">Nazwa</option>
+        <option value="Price">Cena</option>
+    </select>
+    <button @onclick="SortProducts">Sortuj</button>
+</div>
+
+@if (Products != null && Products.Any())
+{
+    <table>
+        <thead>
+            <tr>
+                <th>Nazwa</th>
+                <th>Cena</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var product in Products)
+            {
+                <tr>
+                    <td>@product.Name</td>
+                    <td>@product.Price</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>Brak produktów do wyświetlenia.</p>
+}
+
+@code {
+    List<Product> Products { get; set; }
+    string filterValue { get; set; }
+    string selectedSortOption { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProducts();
+    }
+
+    async Task LoadProducts()
+    {
+        Products = await ProductService.GetProductsAsync();
+    }
+
+    void FilterProducts()
+    {
+        if (!string.IsNullOrWhiteSpace(filterValue))
+        {
+            Products = Products.Where(p =>
+                p.Name.ToLower().Contains(filterValue.ToLower()) ||
+                p.Price.ToString().Contains(filterValue)).ToList();
+        }
+    }
+
+    void ResetFilter()
+    {
+        filterValue = string.Empty;
+        LoadProducts();
+    }
+
+    void SortProducts()
+    {
+        if (selectedSortOption == "Name")
+        {
+            Products = Products.OrderBy(p => p.Name).ToList();
+        }
+        else if (selectedSortOption == "Price")
+        {
+            Products = Products.OrderBy(p => p.Price).ToList();
+        }
+    }
+}

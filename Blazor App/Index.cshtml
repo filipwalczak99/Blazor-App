@@ -1,0 +1,49 @@
+﻿@page
+@model Blazor_App.IndexModel
+@{
+}
+<h1>Lista produktów</h1>
+
+<!-- Formularz dodawania produktu -->
+<form method="post" asp-page-handler="AddProduct">
+    <label>Nazwa produktu:</label>
+    <input type="text" asp-for="NewProduct.Name" />
+    <label>Cena:</label>
+    <input type="number" asp-for="NewProduct.Price" />
+    <button type="submit">Dodaj produkt</button>
+</form>
+
+<hr />
+
+<!-- Lista produktów -->
+<table>
+    <thead>
+        <tr>
+            <th>Nazwa</th>
+            <th>Cena</th>
+            <th>Akcje</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var product in Model.Products)
+        {
+            <tr>
+                <td>@product.Name</td>
+                <td>@product.Price</td>
+                <td>
+                    <!-- Formularz edycji produktu -->
+                    <form method="post" asp-page-handler="EditProduct" asp-route-id="@product.Id">
+                        <input type="hidden" asp-for="@product.Id" />
+                        <input type="text" asp-for="@product.Name" />
+                        <input type="number" asp-for="@product.Price" />
+                        <button type="submit">Edytuj</button>
+                    </form>
+                    <!-- Formularz usuwania produktu -->
+                    <form method="post" asp-page-handler="DeleteProduct" asp-route-id="@product.Id">
+                        <button type="submit">Usuń</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
